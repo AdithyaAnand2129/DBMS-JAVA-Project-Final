@@ -12,8 +12,7 @@
   <name>RoomWise — Smart Campus Room Finder</name>
 
   <properties>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
+    <maven.compiler.release>17</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
@@ -26,25 +25,23 @@
       <version>8.3.0</version>
     </dependency>
 
-    <!-- JUnit 5 — unit tests (BookingOverlapTest, etc.) -->
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <version>5.10.2</version>
-      <scope>test</scope>
-    </dependency>
-
+    <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><version>5.11.4</version><scope>test</scope></dependency>
   </dependencies>
 
   <build>
-    <plugins>
+    <resources>
+      <resource>
+        <directory>database</directory>
+        <includes>
+          <include>schema.sql</include>
+          <include>real_data.sql</include>
 
-      <!-- Surefire: runs JUnit 5 tests with mvn test -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.2.5</version>
-      </plugin>
+        </includes>
+      </resource>
+
+    </resources>
+    <plugins>
+      <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-surefire-plugin</artifactId><version>3.5.2</version></plugin>
 
       <!-- Jar plugin: embed the main class so the jar is executable -->
       <plugin>
@@ -52,6 +49,17 @@
         <artifactId>maven-jar-plugin</artifactId>
         <version>3.3.0</version>
         <configuration>
+          <includes>
+            <include>roomwise/Main.class</include>
+            <include>roomwise/model/**</include>
+            <include>roomwise/dao/**</include>
+            <include>roomwise/service/**</include>
+            <include>roomwise/ui/**</include>
+            <include>roomwise/util/**</include>
+            <include>roomwise/exception/**</include>
+            <include>schema.sql</include>
+            <include>real_data.sql</include>
+          </includes>
           <archive>
             <manifest>
               <mainClass>roomwise.Main</mainClass>

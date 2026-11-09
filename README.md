@@ -1,104 +1,129 @@
 # RoomWise
 
-RoomWise displays the supplied real college timetable using MySQL, JDBC, and a
-small console menu.
+Java 17+ campus room finder with a terminal menu, MySQL and plain JDBC.
+Rooms, bookings and recurring timetable classes have complete CRUD. Scheduling
+writes reject overlapping room or teacher events inside a guarded transaction.
 
-## Simple project map
+## Project layout
 
-```text
-RoomWise/
-├── data/                 Real college timetable data
-│   ├── theory.json       3,030 theory records
-│   └── labs.json         1,137 lab records
-├── src/main/java/com/roomwise/
-│   └── Main.java         Student timetable application
-├── src/main/resources/
-│   ├── schema.sql        MySQL tables and relationships
-│   ├── real_data.sql     Workbench-ready SQL generated from both JSON files
-│   └── db.properties     Local database connection settings
-├── pom.xml               Maven dependency list
-└── README.md             This guide
+```
+src/main/java/roomwise/
+  Main.java          Application composition and launch
+  model/             Room, ScheduledEvent, Booking, TimetableSlot, FreeRoom
+  dao/               CampusDao, JdbcCampusDao, DatabaseInitializer
+  service/           CampusService
+  ui/                ConsoleMenu
+  util/              DatabaseConnection, Validation
+  exception/         DatabaseException, BookingConflictException, NotFoundException
+src/test/java/roomwise/  Model and isolated MySQL integration tests
+database/               schema.sql, real_data.sql and original data exports
+docs/                   Final report and archived authoring assets
+db.properties.example   Example settings; copy privately to db.properties
+pom.xml                  Maven build
+run_roomwise.bat          Windows launcher
 ```
 
-## Explaining `Main.java`
+## Setup and run
 
-All Java code is intentionally kept in one file for easy presentation. Use the
-section order below when explaining it.
+Use Java 17 or newer, Maven and MySQL 8.0.16+ with InnoDB. Verification used
+JDK 21 and MySQL 8.0.40. Create roomwise_db using MySQL Workbench and configure
+db.properties from the example. Run from the RoomWise directory. The properties
+file is read from the working directory and is not packaged in the JAR.
+Alternatively pass -Droomwise.config=ABSOLUTE_PATH before the Java class name.
 
-| Section | What it does | Concept to mention |
-|---|---|---|
-| `Main` | Starts the timetable browser | Entry point |
-| `TimetableSlot` | Holds the four student-facing fields | Encapsulation |
-| `TimetableDao` | Reads timetable records with prepared statements | JDBC / DAO |
-| `ConsoleMenu` | Shows browse and search options | User interface |
+```powershell
+mvn package dependency:copy-dependencies -DincludeScope=runtime
+java -cp "target/classes;target/dependency/*" roomwise.Main
 
-## Database design
-
-The redesigned database keeps timetable metadata internally in `rooms`,
-`timetable_slots`, and `bookings`. The student-facing timetable fields remain
-simple:
-
-| Column | Meaning |
-|---|---|
-| `room` | Room name/number |
-| `start_time` | Class start time |
-| `end_time` | Class end time |
-| `id` | Timetable record ID |
-
-The weekday, course, section, teacher, class type, and booking fields are
-retained internally because they are required for live availability, safe
-bookings, and detailed class searches. Capacity, buildings, users, and
-equipment are not stored because they are not needed by this application.
-
-## How to run it
-
-There are two ways to start the app:
-
-- Swing GUI: `RUN_SWING.md`
-- Terminal mode: `RUN_TERMINAL.md`
-
-### Quick start
-
-```bash
-mvn clean package
-java -jar target/roomwise-1.0-SNAPSHOT.jar
 ```
 
-For the console version:
+Run run_roomwise.bat to open the terminal menu directly. The launcher cleans
+generated target files after the application exits. If another process holds
+a dependency JAR, close that process and run mvn clean later.
 
-```bash
-java -cp target/classes;C:/Users/<your-user>/.m2/repository/com/mysql/mysql-connector-j/8.3.0/mysql-connector-j-8.3.0.jar roomwise.Main --console
+For a **new empty database only**, populate the supplied 157 rooms / 4,167
+timetable rows once:
+
+```powershell
+java -cp "target/classes;target/dependency/*" roomwise.Main --seed
 ```
 
-## Load and run it
+Startup creates missing tables and migrates the legacy timetable foreign key
+from CASCADE to RESTRICT. It does not reload data when counts change. --seed
+refuses nonempty domain tables, preserving existing changes. Directly executing
+real_data.sql is not the recommended import route; use the guarded seed command.
 
-In MySQL Workbench, run `src/main/resources/schema.sql` once. It removes the
-old multi-table design and creates the minimal `timetable_slots` table.
-Then run `src/main/resources/real_data.sql` once. It loads all 4,167 records
-from `data/theory.json` and `data/labs.json`.
+## Features and OOP evidence
 
-If Java reports that the database is using the old schema, the migration has
-not been run yet. Execute both files in that order; `schema.sql` intentionally
-removes the previous tables before creating the minimal table.
+- **Encapsulation:** private model fields; validated Room.setName.
+- **Abstraction:** ScheduledEvent abstract class and CampusDao interface.
+- **Inheritance:** Booking and TimetableSlot extend ScheduledEvent.
+- **Runtime polymorphism:** occursOn / description called through the parent.
+- **Overloading:** three CampusService.search signatures.
+- **Packages:** UI calls service; service depends on DAO interface; SQL stays in DAO.
+- **Exceptions:** custom errors, try-with-resources and explicit rollback.
+- **CRUD:** Rooms, Bookings and Timetable console submenus.
 
-After the first successful setup, Java automatically checks the schema and
-record count at startup and loads the bundled SQL when required. MySQL Server
-must be running, but MySQL Workbench does not need to be open.
+Booking dates use YYYY-MM-DD and times use HH:MM (optional seconds). The point
+search reports the next event; interval search requires the whole interval to
+be free. Occupied results include both bookings and classes and distinguish
+event counts from distinct room counts. Adjacent intervals are allowed.
 
-Compile and run from this folder with the MySQL Connector/J JAR on the
-classpath:
+All application writes lock the singleton schedule_guard InnoDB row before
+checking conflicts. Teacher comparisons trim and ignore case. External SQL
+writers must honor the same lock protocol. Room deletion is restricted while
+dependent bookings or timetable rows exist.
 
-```text
-C:\Users\adith\.m2\repository\com\mysql\mysql-connector-j\8.3.0\mysql-connector-j-8.3.0.jar
+## Tests
+
+```powershell
+mvn test
+mvn test "-Droomwise.integration=true"
 ```
 
-The four console options are:
+The normal command runs 4 model tests and skips the database integration class.
+The explicit integration command runs all **21 tests**. It creates and removes
+its own UUID-named roomwise_test_* database, so the configured account needs
+CREATE/DROP DATABASE privileges for this test run. Campus data is not cleared.
+Tests cover all entity CRUD, constraints, overlap boundaries, rollback, quoted
+input, safe seeding, schema migration and concurrent room/teacher reservations.
 
-1. **Free rooms** — uses the current weekday and time automatically and shows
-   each room's free start and next occupation time.
-2. **Display all campus rooms** — lists every room and its ID.
-3. **Book a room** — lists the currently free rooms, asks for the room ID and
-   teacher, and permits booking only until the next scheduled class.
-4. **Find classes during a time range** — shows room, course, section, teacher,
-   class type, and times for active classes today.
-Configure the local MySQL password in `src/main/resources/db.properties`.
+## Report and demonstration
+
+The updated 56-page docs/RoomWise_Final_Project_Report.pdf documents the simplified terminal-only implementation. It includes
+all requested chapters, REC logo, confirmed team/faculty details, diagrams,
+SQL schema, code images and images rendered from actual terminal output. docs/report-source.zip
+retains earlier materials and current terminal-20261109/ source/assets, input sequences and full output logs.
+The older RoomWise_Implementation_and_Database_Report.pdf is a historical
+pre-upgrade explanation; its missing-feature notes no longer describe this build.
+
+Use uniquely named demo records for evaluation: add a room, create/read/update
+a booking, reject a conflicting booking, delete it, then delete the empty room.
+All three team members should explain every OOP concept and follow the UI to
+service to DAO to SQL path. The final report contains a full demo sequence.
+
+This is a trusted local prototype: no login/authorization, stable teacher IDs,
+semester calendar, overnight events, capacity/equipment filters or audit history.
+Source timetable collisions are retained. Availability scans event collections;
+terminal operations wait for query completion. The report explains these limitations.
+
+Keep local settings private. The settings file was tracked before this work;
+ignore rules do not remove credentials from existing Git history.
+
+## Simpler implementation
+
+ConsoleMenu uses one named method per task and readBooking/readSlot helpers
+that collect one field at a time. CampusService uses ordinary for loops and
+boolean variables instead of chained stream expressions. The class hierarchy,
+DAO interface and package boundaries remain visible for OOP evaluation. Shared
+JDBC transaction helpers keep the concurrency rules in one place.
+
+The new terminal integration test verifies updates, reads, deletion and recovery
+after an invalid ID. See Chapter 5 for the source walkthrough and Appendix B for
+recorded console demonstrations.
+
+Date/time shortcut: at `Date (YYYY-MM-DD or enter for current date and time)`,
+press Enter to use the computer's current local date and time (to the minute),
+without a separate Time/Start prompt. This works for free-room and occupied
+searches, interval starts, and booking starts. Intervals/bookings still require
+an explicit end time. Enter a date to continue with manual time entry.

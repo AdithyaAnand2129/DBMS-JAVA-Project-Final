@@ -1,12 +1,11 @@
 -- RoomWise real timetable and rooms
 -- Generated from data/theory.json and data/labs.json.
 -- Records: 4167
+-- Afternoon periods are stored in 24-hour time (1:00 -> 13:00, 4:10 -> 16:10).
 
 USE roomwise_db;
 START TRANSACTION;
-DELETE FROM bookings;
-DELETE FROM timetable_slots;
-DELETE FROM rooms;
+-- Initial data only. The application --seed command refuses nonempty tables.
 
 INSERT INTO rooms (id, room) VALUES
   (1, 'A102'),

@@ -6,8 +6,8 @@ The full college timetable exports are included in this folder:
 - `labs.json` — 1,137 lab records
 
 For a MySQL Workbench import without running Java, execute
-`../src/main/resources/schema.sql` first and then
-`../src/main/resources/real_data.sql`. The SQL file is generated from both
+`../schema.sql` first and then
+`../real_data.sql`. The SQL file is generated from both
 JSON files and contains all 4,167 timetable records.
 
 The SQL conversion retains room, weekday, times, course, section, teacher, and

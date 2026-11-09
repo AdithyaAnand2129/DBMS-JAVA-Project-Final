@@ -1,27 +1,21 @@
-# ── Credentials (never commit these) ──────────────────────────────────────────
-src/main/resources/db.properties
-
-# ── Compiled output ────────────────────────────────────────────────────────────
+# Generated build output
 target/
 out/
 *.class
 *.jar
 
-# ── IDE project files ──────────────────────────────────────────────────────────
+# Local database credentials
+db.properties
+**/db.properties
+
+# IDE and OS files
 .idea/
 *.iml
-.eclipse/
-.settings/
-.classpath
 .project
-nbproject/
-.vs/
-*.suo
-*.user
-
-# ── OS artefacts ───────────────────────────────────────────────────────────────
+.classpath
+.settings/
 .DS_Store
 Thumbs.db
 
-# ── Logs ──────────────────────────────────────────────────────────────────────
+# Logs
 *.log
