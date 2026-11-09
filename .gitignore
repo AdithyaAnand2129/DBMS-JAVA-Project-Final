@@ -1,0 +1,27 @@
+# ── Credentials (never commit these) ──────────────────────────────────────────
+src/main/resources/db.properties
+
+# ── Compiled output ────────────────────────────────────────────────────────────
+target/
+out/
+*.class
+*.jar
+
+# ── IDE project files ──────────────────────────────────────────────────────────
+.idea/
+*.iml
+.eclipse/
+.settings/
+.classpath
+.project
+nbproject/
+.vs/
+*.suo
+*.user
+
+# ── OS artefacts ───────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log

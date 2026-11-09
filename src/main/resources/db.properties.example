@@ -1,0 +1,10 @@
+# RoomWise — JDBC connection settings
+# Copy this file to db.properties and fill in your values.
+# db.properties is git-ignored. NEVER commit real credentials.
+#
+# For a local MySQL Server installation, update these values to match your
+# MySQL database, username, and password.
+
+db.url=jdbc:mysql://localhost:3306/roomwise_db?useSSL=false&serverTimezone=Asia/Kolkata&allowPublicKeyRetrieval=true
+db.user=roomwise_user
+db.password=change_me_pass
