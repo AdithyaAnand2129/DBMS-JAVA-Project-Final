@@ -7,7 +7,7 @@ writes reject overlapping room or teacher events inside a guarded transaction.
 ## Project layout
 
 ```
-src/main/java/roomwise/
+RoomWise/
   Main.java          Application composition and launch
   model/             Room, ScheduledEvent, Booking, TimetableSlot, FreeRoom
   dao/               CampusDao, JdbcCampusDao, DatabaseInitializer
@@ -27,7 +27,7 @@ run_roomwise.bat          Windows launcher
 
 Use Java 17 or newer, Maven and MySQL 8.0.16+ with InnoDB. Verification used
 JDK 21 and MySQL 8.0.40. Create roomwise_db using MySQL Workbench and configure
-db.properties from the example. Run from the RoomWise directory. The properties
+db.properties from the example. Run from the repository root. The properties
 file is read from the working directory and is not packaged in the JAR.
 Alternatively pass -Droomwise.config=ABSOLUTE_PATH before the Java class name.
 

@@ -29,6 +29,7 @@
   </dependencies>
 
   <build>
+    <sourceDirectory>RoomWise</sourceDirectory>
     <resources>
       <resource>
         <directory>database</directory>
